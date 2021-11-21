@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "308362037578",
+    "project_id": "toolsv2",
+    "storage_bucket": "toolsv2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:308362037578:android:4d1382150a6090186759b3",
+        "android_client_info": {
+          "package_name": "com.example.toolsv2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "308362037578-2ca4bnmth9ae2q2t6b0uu87he30kfgb8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVKfoCgymYgVRWOW2A5PHvClaFso27VzE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "308362037578-2ca4bnmth9ae2q2t6b0uu87he30kfgb8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

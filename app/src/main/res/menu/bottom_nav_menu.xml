@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_movies"
+        android:title="@string/movies_title"
+        app:showAsAction="never"
+        android:icon="@drawable/ic_local_movies"/>
+
+    <item
+        android:id="@+id/action_location"
+        android:title="@string/location_title"
+        app:showAsAction="never"
+        android:icon="@drawable/ic_location_on"/>
+
+    <item
+        android:id="@+id/action_gallery"
+        android:title="@string/gallery_title"
+        app:showAsAction="never"
+        android:icon="@drawable/ic_insert_photo"/>
+
+</menu>
