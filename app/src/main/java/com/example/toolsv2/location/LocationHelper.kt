@@ -9,8 +9,8 @@ import android.location.Location
 
 class LocationHelper {
 
-    var LOCATION_REFRESH_TIME = 300000 // 3 seconds. The Minimum Time to get location update
-    var LOCATION_REFRESH_DISTANCE = 0 // 0 meters. The Minimum Distance to be changed to get location update
+    var LOCATION_REFRESH_TIME = 500000 // Se ejecutará el servicio cada 5 minutos
+    var LOCATION_REFRESH_DISTANCE = 0 // Se establece la cantidad mínima de metros para hacer una actualizaicón en la posición
 
     @SuppressLint("MissingPermission")
     fun startListeningUserLocation(context: Context, myListener: MyLocationListener) {

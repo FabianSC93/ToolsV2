@@ -14,15 +14,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding //Variable que nos permitirá inicar con el enlace entre el código y las vistas
 
-    private lateinit var mActivityFragment: Fragment
+    private lateinit var mActivityFragment: Fragment //Inicializamos una variable que nos permita acceder a los métos de los fragmentos
     private lateinit var mFragmentManager: FragmentManager //Declaramos una variables que nos permitirá acceder a los métodos para agregar, quitar o reemplazar los fragmentos
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater) //Se inicializa binding para inflar nuestra vista
         super.onCreate(savedInstanceState)
-        setContentView(binding.root)
+        setContentView(binding.root) //Se establece binging como la raíz
 
-        setupBottomNav() //Llamos a la función para comenzar con el manejo de los fragmentos
+        setupBottomNav() //Llamamos a la función para comenzar con el manejo de los fragmentos
     }
 
     //Esta función vinculara cada fragmento con una opción del menú creado
@@ -45,17 +45,17 @@ class MainActivity : AppCompatActivity() {
         //De acuerdo al id de nuestro menú, se mostrará cada uno de los fragmentos pero ocultaremos el fragmento que este activo.
         binding.bottomNav.setOnItemSelectedListener {
             when(it.itemId){
-                R.id.action_movies -> {
+                R.id.action_movies -> { //La siguiente opción permite acceder al apartado de películas, ocultado la vista anterior y mostrando la siguiente
                     mFragmentManager.beginTransaction().hide(mActivityFragment).show(moviesFragment).commit()
                     mActivityFragment = moviesFragment
                     true
                 }
-                R.id.action_location ->{
+                R.id.action_location ->{ //La siguiente opción permite acceder al apartado de Ubicación, ocultado la vista anterior y mostrando la siguiente
                     mFragmentManager.beginTransaction().hide(mActivityFragment).show(locationFragment).commit()
                     mActivityFragment = locationFragment
                     true
                 }
-                R.id.action_gallery ->{
+                R.id.action_gallery ->{ //La siguiente opción permite acceder al apartado de Galería, ocultado la vista anterior y mostrando la siguiente
                     mFragmentManager.beginTransaction().hide(mActivityFragment).show(galleryFragment).commit()
                     mActivityFragment = galleryFragment
                     true

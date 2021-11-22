@@ -7,4 +7,5 @@
     <string name="upload_images">Subir fotos</string>
     <string name="camera">Camara</string>
     <string name="gallery">Galería</string>
+    <string name="iv_text_description">Imagen de la notifación</string>
 </resources>

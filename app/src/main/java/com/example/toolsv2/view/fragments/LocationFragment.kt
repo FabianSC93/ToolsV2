@@ -1,185 +1,90 @@
 package com.example.toolsv2.view.fragments
 
-import android.Manifest
+
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.Geocoder
 import android.location.Location
-import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
-import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.toolsv2.R
 import com.example.toolsv2.databinding.FragmentLocationBinding
 import com.example.toolsv2.location.LocationService
-import com.google.android.gms.location.*
+import com.example.toolsv2.presenter.LocationPresenter
+import com.example.toolsv2.presenter.LocationPresenterImpl
+import com.example.toolsv2.view.interfaces.LocationView
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import java.util.*
 
-class LocationFragment : Fragment(R.layout.fragment_location), OnMapReadyCallback, LocationListener {
+//Se genera la clase que tendrá al fragmento de la ubicación, el cual hereda de LocationView, OnMapReadyCallback y LocationListener
+class LocationFragment : Fragment(R.layout.fragment_location), LocationView, OnMapReadyCallback {
 
-    private lateinit var mBinding: FragmentLocationBinding
+    //Se inician nuestras variables globales
+    private lateinit var mBinding: FragmentLocationBinding //mBinding será usada para vincular la vista con el código
+    private lateinit var locationPresenter: LocationPresenter //Permitirá hacer las peticiones al presentador
+    private lateinit var mMap: GoogleMap //Permitirá acceder a los métodos de Google Maps
 
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private lateinit var locationRequest: LocationRequest
-    private var PERMISION_MAP = 1101
-
-    private lateinit var mMap: GoogleMap
-
+    //Se sobreescibe el método del fragmento, donde se generá la vista
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
-
         super.onViewCreated(view, savedInstanceState)
 
+        //Se instancia mBinding que permite unirlo con la vista
         mBinding = FragmentLocationBinding.bind(view)
+        //Se instancia el Presenter, recibiendo al fragmento y la actividad que se requerirá para métodos futuros
+        locationPresenter = LocationPresenterImpl(this, requireActivity())
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        //Permite inicializar una variable de tipo mapFragment, que nos permite inicializar nuestro mapa y a su vez vincularlo con el elemento que lo contendrá
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-
+        //Se coloca un listener en nuestro botón creado, el cual al hacer presionado permite verificar los permisos y a su vez obtener la ubicación
         mBinding.btnLocation.setOnClickListener {
-            getLastLocation()
-            // requestPermissionsLocation()
-
-        }
- /*       if (!checkPermission()) {
-            requestPermission()
-        }*/
-
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun getLastLocation(){
-        if(checkPermision()){
-            if (isLocationEnable()){
-                fusedLocationProviderClient.lastLocation.addOnCompleteListener{ task->
-                    var location: Location? = task.result
-                    if (location == null){
-                        getNetworkLocation()
-                    }else{
-                        //requireActivity().startService(,Intent() tent(this, LocationService::class.java))
-
-                        ContextCompat.startForegroundService(requireActivity(),
-                            Intent(requireActivity(), LocationService::class.java)
-                        )
-                        //binding.tvUbicacion.text = "Lat: ${location.latitude} log ${location.longitude} \n Ciudad: " + getCityName(location.latitude, location.longitude) + ", pais"+ getcountryName(location.latitude,location.longitude)
-                        var cameraUpdate: CameraUpdate = CameraUpdateFactory.newLatLngZoom(LatLng(location.latitude,location.longitude),18F)
-                        mMap!!.moveCamera(cameraUpdate)
-                        mMap!!.mapType = GoogleMap.MAP_TYPE_NORMAL
-                    }
-                }
-
-            }else{
-                Toast.makeText(this.context,"Activa tu servicio de Ubicacion por Favor", Toast.LENGTH_LONG).show()
-            }
-
-        }else{
-            requestPermission()
+            getPermission()
         }
     }
 
+    //Se verifica el estatus en el que se encuentra el fragmento del mapa
     @SuppressLint("MissingPermission")
-    private fun getNetworkLocation(){
-        locationRequest = LocationRequest()
-        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        locationRequest.interval = 0
-        locationRequest.fastestInterval = 0
-        locationRequest.numUpdates = 2
-        fusedLocationProviderClient!!.requestLocationUpdates(
-            locationRequest,locationCallback, Looper.myLooper()
+    override fun onMapReady(googleMap: GoogleMap) {
+        try {
+            mMap = googleMap
+            mMap!!.isMyLocationEnabled = true;
+        }catch (e: Exception){
 
-        )
+        }
     }
 
-    private val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(p0: LocationResult) {
-            var lastLocation: Location = p0.lastLocation
-            //binding.tvUbicacion.text = "Lat: ${lastLocation.latitude} log ${lastLocation.longitude} \n Ciudad: " + getCityName(lastLocation.latitude, lastLocation.longitude) + ", pais"+ getcountryName(lastLocation.latitude,lastLocation.longitude)
-            //mMap.mapType(GoogleMap.MAP_TYPE_NORMAL)
+    //Permite hacer al presenter la solicitud de la ubicación del usuario
+    override fun getLocation() {
+        locationPresenter.getLocation()
+    }
 
+    //Permite mostrar la ubicación del usuario, dirigiendolo en el mapa y recibiendo como parametro las coordenadas mediante location.
+    override fun showLocation(location:Location) {
+        val cameraUpdate: CameraUpdate = CameraUpdateFactory.newLatLngZoom(LatLng(location.latitude,location.longitude),18F)
+        mMap!!.moveCamera(cameraUpdate)
+        mMap!!.mapType = GoogleMap.MAP_TYPE_NORMAL //Se establece el tipo de mapa
+    }
+
+    //Permite conseguir el estatus de los permisos de ubicación para verificar que sea posible accesar a la ubicación del usuario, solicitandose al usuario
+    override fun getPermission() {
+        locationPresenter.getPermission()
+    }
+
+    //Obtiene el estatus de los permisos mediante un true o un false, dependiendo de la elección del usuario
+    override fun statePermission(permission: Boolean) {
+        if(permission){
+            getLocation()
             ContextCompat.startForegroundService(requireActivity(),
                 Intent(requireActivity(), LocationService::class.java))
         }
     }
 
-    @SuppressLint("MissingPermission")
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        if(checkPermision()) {
-            mMap!!.isMyLocationEnabled = true;
-        }
-    }
-
-    companion object{
-        @JvmStatic
-        fun newInstance() = MapFragment()
-    }
-
-
-    private fun checkPermision():Boolean{
-        if(ActivityCompat
-                .checkSelfPermission(requireActivity(),android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(requireActivity(),
-                Manifest.permission.ACCESS_COARSE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED){
-            return true
-
-        }
-        return false
-    }
-
-    private fun requestPermission(){
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-            PERMISION_MAP
-        )
-    }
-
-    private fun isLocationEnable():Boolean{
-        val locationManager = this.context?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
-            LocationManager.NETWORK_PROVIDER)
-    }
-
-    private fun getCityName(lat:Double,long: Double):String{
-        var cityName = ""
-        var geoCoder = Geocoder(this.context, Locale.getDefault())
-        var adress = geoCoder.getFromLocation(lat,long,1)
-        cityName = adress.get(0).locality
-        return cityName
-
-    }
-
-    private fun getcountryName(lat:Double,long: Double):String{
-        var countryName = ""
-        var geoCoder = Geocoder(this.context, Locale.getDefault())
-        var adress = geoCoder.getFromLocation(lat,long,1)
-        countryName = adress.get(0).countryName
-        return countryName
-
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    override fun onLocationChanged(location: Location) {
-        Log.d("TAG", String.format("Nueva ubicación: (%s, %s)",location?.getLatitude(), location?.getLongitude()));
-
+    //Se muestrá el error un Toast, admeás de recibir un texto como parametro
+    override fun showError(errorMessage: String) {
+        Toast.makeText(this.context,errorMessage, Toast.LENGTH_LONG).show()
     }
 }

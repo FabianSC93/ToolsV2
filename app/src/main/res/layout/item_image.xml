@@ -10,7 +10,7 @@
         android:layout_height="100dp"
         android:layout_centerHorizontal="true"
         android:src="@drawable/ic_launcher_background"
-        android:scaleType="centerCrop"/>
+        android:scaleType="fitXY"/>
     <TextView
         android:id="@+id/tvGvFotos"
         android:layout_width="wrap_content"

@@ -1,203 +1,67 @@
 package com.example.toolsv2.view.fragments
 
 import android.app.Activity
-import android.app.ProgressDialog
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.toolsv2.R
 import com.example.toolsv2.databinding.FragmentGalleryBinding
+import com.example.toolsv2.presenter.GalleryPresent
+import com.example.toolsv2.presenter.GalleryPresentImpl
 import com.example.toolsv2.view.adapters.GalleryAdapter
 import com.example.toolsv2.view.adapters.Images
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.StorageReference
+import com.example.toolsv2.view.interfaces.GalleryView
 import java.io.ByteArrayOutputStream
-import java.util.HashMap
-import com.google.firebase.database.ktx.database
-import com.google.firebase.storage.FirebaseStorage
 
-class GalleryFragment : Fragment(R.layout.fragment_gallery) {
+//La siguiente clase almacenará el fragmento de la galería
+class GalleryFragment : Fragment(R.layout.fragment_gallery), GalleryView {
 
-    private lateinit var mBinding: FragmentGalleryBinding
+    //Se inician las variables globales
+    private lateinit var mBinding: FragmentGalleryBinding //Permite vincular la vista con el código
+    private lateinit var galleryPresent: GalleryPresent //Permite inicar el Presenter para el envío de solicitud de datos y a su vez la recepción de datos
+    private lateinit var galleryAdapter: GalleryAdapter //Permite inicial el Adaptar que nos ayudará para acomodar nuestras imagenes en un Grid
+    private lateinit var urls: MutableList<Images> //Permitirá obtener las URL de cada imagen seleccionada
 
-    private var progress: ProgressDialog? = null
+    private var PICK_IMAGE_MULTIPLE = 1 //Para obtener una respuesta de la galería
+    private val cameraRequest = 1888 //Para obtener una respuesta de la cámara
 
-    private lateinit var adapterGaleria: GalleryAdapter
-    private lateinit var urls: MutableList<Images>
-    //Imagenes
-    var PICK_IMAGE_MULTIPLE = 1
-    private val cameraRequest = 1888
-    private var storageReference: StorageReference? = null
-
-
-    private val database = Firebase.database
-    private val myRef = database.getReference("user")
-
+    //Se sobreescribe el método del Fragmento, en donde se generá la vista
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        mBinding = FragmentGalleryBinding.bind(view)
         super.onViewCreated(view, savedInstanceState)
-
-        urls = mutableListOf()
-        adapterGaleria = GalleryAdapter(this.context,urls)
-        mBinding.gvImages.adapter = adapterGaleria
-
-        storageReference = FirebaseStorage.getInstance().reference
-
-        mBinding.btnGallery.setOnClickListener{
-            requestPermissionsGaleria()
-        }
+        mBinding = FragmentGalleryBinding.bind(view)  //Se inicializa mBinding uniendolo con la vista
+        galleryPresent = GalleryPresentImpl(this, requireActivity())  //Se inicializa el presente, enviandole la vista actual y un activity
 
 
-        mBinding.btnCamera.setOnClickListener{
-            requestPermissionsCamara()
-        }
+        urls = mutableListOf() //Se inicializa como una mutableList vacía para almacenar los datos
+        galleryAdapter = GalleryAdapter(this.context,urls) //Se inicializaliza el adapatador, pasandole el contexto y la lista vacía
+        mBinding.gvImages.adapter = galleryAdapter //Se vincula el elemento de nuestra vista con el adapter para inflar la vista
 
-        mBinding.btnUpload.setOnClickListener{
 
-            urls
-            for (item in urls){
-                if(item.uri!= null) {
-
-                    uploadImage(item)
-                }
+        //Se tienen tres botones, una para la cámara, galería y subir, asignandole a cada uno un listener para ingresar a los permisos inicialmente y posterior a cada uno de los métodos
+        mBinding.apply {
+            btnGallery.setOnClickListener {
+                getPermissionGallery()
+            }
+            btnCamera.setOnClickListener {
+                getPermissionCamera()
+            }
+            btnUpload.setOnClickListener {
+                image(urls)
             }
         }
     }
 
-    private fun uploadImage(item: Images): Boolean{
-        val FileUri = item.uri
-        val Folder: StorageReference =
-            FirebaseStorage.getInstance().getReference().child("User")
-        val file_name: StorageReference = Folder.child("file" + FileUri!!.lastPathSegment)
-        file_name.putFile(FileUri).addOnSuccessListener { taskSnapshot ->
-            file_name.getDownloadUrl().addOnSuccessListener { uri ->
-                val hashMap =
-                    HashMap<String, String>()
-                hashMap["link"] = java.lang.String.valueOf(uri)
-                myRef.setValue(hashMap)
-                Log.d("Mensaje", "Se subió correctamente")
-                urls.remove(item)
-                adapterGaleria.notifyDataSetChanged()
-            }
-        }
-        return false
-    }
-
-
-    companion object{
-        @JvmStatic
-        fun newInstance() = GalleryFragment()
-    }
-
-    private fun requestPermissionsGaleria(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){ //Primero se debe averiguar el nivel de API
-            when{
-                //Se comprueba si los permisos ya están habilitados, de ser así se accesa a la galería
-                ContextCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.READ_EXTERNAL_STORAGE)  == PackageManager.PERMISSION_GRANTED -> {
-                    selectPhotoGallery()
-                }
-                //En caso contrario se solicitará aceptar los permisos, pero también se comprobará si son aceptados o no
-                else ->{
-                    requestPermissionLauncherREAD_EXTERNAL_STORAGE.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                }
-            }
-        }else{
-            selectPhotoGallery() //Método que seleccionará la imagen de nuestra galería
-        }
-    }
-    //Esta variable solicitará los permisos mediante la librería de Activity importada
-    private val requestPermissionLauncherREAD_EXTERNAL_STORAGE = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()){
-            isOk ->
-        if (isOk){  //En caso de que fueron aceptados se procede con el método para accesar a la galería
-            selectPhotoGallery()
-        }else{   //En caso de que fueron aceptados se procede a mostrar un mensaje con un toast
-            warningMessage()
-        }
-    }
-
-    //Esta variable solicitará los permisos mediante la librería de Activity importada
-    private val requestPermissionLauncherCAMERA = registerForActivityResult(ActivityResultContracts.RequestPermission()){
-            isOk ->
-        if (isOk){  //En caso de que fueron aceptados se procede con el método para accesar a la galería
-            selectPhotoCamara()
-        }else{   //En caso de que fueron aceptados se procede a mostrar un mensaje con un toast
-            warningMessage()
-        }
-    }
-
-    private val starForActivityGallery = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ){ result ->
-        if (result.resultCode == Activity.RESULT_OK){
-            val location = result.data?.data
-            //binding.ivFoto.setImageURI(location)
-
-        }
-    }
-
-
-    //Método que ingresa a la galería de nuestro dispositivo
-    private fun selectPhotoGallery() {
-        val intent = Intent()
-        intent.type = "image/*"
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-        intent.action = Intent.ACTION_GET_CONTENT
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1)
-    }
-
-
-
-    private fun requestPermissionsCamara(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){ //Primero se debe averiguar el nivel de API
-            when{
-                //Se comprueba si los permisos ya están habilitados, de ser así se accesa a la galería
-                ContextCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.CAMERA)  == PackageManager.PERMISSION_GRANTED -> {
-                    selectPhotoCamara()
-                }
-                //En caso contrario se solicitará aceptar los permisos, pero también se comprobará si son aceptados o no
-                else ->{
-                    requestPermissionLauncherCAMERA.launch(android.Manifest.permission.CAMERA)
-                }
-            }
-        }else{
-            selectPhotoCamara() //Método que seleccionará la imagen de nuestra galería
-        }
-    }
-
-
-
-    //Método que ingresa a la galería de nuestro dispositivo
-    private fun selectPhotoCamara() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        startActivityForResult(cameraIntent, cameraRequest)
-
-    }
-
+    //Esta función permite obtener la respuesta que se obtiene al cargar las imagenes en nuestra vista
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         try {
-            progress = ProgressDialog(this.context)
-            progress?.setTitle("Carga de Galeria")
-            progress?.setMessage("Espere")
-            progress?.max = 10
-            progress?.show()
-            // When an Image is picked
+
             if (requestCode === PICK_IMAGE_MULTIPLE && resultCode === Activity.RESULT_OK && null != android.R.attr.data) {
-                // Get the Image from data
                 val filePathColumn = arrayOf(MediaStore.Images.Media.DATA)
-                //imagesEncodedList = ArrayList<String>()
                 if (data!!.getClipData() != null) {
                     val count = data!!.clipData!!.itemCount
                     if (count>0) {
@@ -208,32 +72,26 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
                 } else{
                     val imageUri = data?.data
                     urls.add(Images(imageUri))
+                    getImage(urls)
                 }
-
-                adapterGaleria.notifyDataSetChanged()
-
+                getImage(urls)
             } else if (requestCode == cameraRequest) {
                 val photo: Bitmap = data?.extras?.get("data") as Bitmap
-
                 urls.add(Images(getImageUri(photo)))
-                adapterGaleria.notifyDataSetChanged()
+                getImage(urls)
             }else {
                 Toast.makeText(
-                    this.context, "You haven't picked Image",
+                    this.context, "No has tomado una imagén",  //En caso de estar vacío, aparecerá el siguiente mensaje
                     Toast.LENGTH_LONG
                 ).show()
             }
         } catch (e: Exception) {
-            Toast.makeText(this.context, "Something went wrong", Toast.LENGTH_LONG)
+            Toast.makeText(this.context, "Hubo un problema", Toast.LENGTH_LONG) //En caso de tener algún problema se notificará al usuario
                 .show()
         }
-        Handler(Looper.getMainLooper()).postDelayed({
-            progress?.dismiss();
-        }, 1000)
-
         super.onActivityResult(requestCode, resultCode, data)
     }
-
+    //La siguiente función transforma la imagen a un Bitmap y realiza un almacenamiento de forma local pero temporal
     private fun getImageUri(bitmap: Bitmap): Uri? {
         val bytes = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
@@ -246,7 +104,67 @@ class GalleryFragment : Fragment(R.layout.fragment_gallery) {
         )
         return Uri.parse(path)
     }
-    private fun warningMessage(){
-        Toast.makeText(context,"Es necesario aceptar los permisos", Toast.LENGTH_SHORT).show()
+
+    //La siguiente función permite abrir la cámara por un intent
+    private fun selectPhotoCamara() {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(cameraIntent, cameraRequest)
+    }
+
+    //La siguiente función permite abrir la galería mediante un intent y obtener el contenido
+    private fun selectPhotoGallery() {
+        val intent = Intent()
+        intent.type = "image/*"
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+        intent.action = Intent.ACTION_GET_CONTENT
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1)
+    }
+
+    //La siguiente función permite hacer la solicitud al Presenter de las imagenes que se van a subir
+    override fun getImage(images: MutableList<Images>) {
+        galleryPresent.getImage(images)
+    }
+
+    //La siguiente función permite mostrar las imagenes obtenidas mediante el Presenter, comprobando antes si no esta vacío el arreglo
+    //En caso de no estar vacío se le notifica al adaptador
+    override fun showImage(images: MutableList<Images>) {
+        urls = if(images.size>0) {
+            images
+        }else mutableListOf()
+        galleryAdapter.notifyDataSetChanged()
+    }
+
+    //La siguiente función permite solicitar los permisos de acceso a la galería al Presenter
+    override fun getPermissionGallery() {
+        galleryPresent.getPermissionGallery()
+    }
+
+    //La siguiente función permite solicitar los permisos de acceso a la Camara al Presenter
+    override fun getPermissionCamera() {
+        galleryPresent.getPermissionCamera()
+    }
+
+    //La siguiente función permite obtener el estatus de los permisos de la camara que proporcionó el Presenter
+    override fun confirmPermissionCamera(permission: Boolean) {
+        if(permission){
+            selectPhotoCamara()
+        }
+    }
+
+    //La siguiente función permite obtener el estatus de los permisos de la galería que proporcionó el Presenter
+    override fun confirmPermissionGallery(permission: Boolean) {
+        if(permission){
+            selectPhotoGallery()
+        }
+    }
+
+    //La siguiente función permite obtener un mensaje que puede mostrarse en caso de algún error
+    override fun showError(errorMessage: String) {
+        Toast.makeText(this.context, errorMessage, Toast.LENGTH_LONG).show()
+    }
+
+    //La siguiente función permite obtener cada imagen y generar una lista de las mismas
+    override fun image(images: MutableList<Images>) {
+        galleryPresent.image(images)
     }
 }

@@ -1,4 +1,4 @@
-package com.example.toolsv2.model.interfaces
+package com.example.toolsv2.model.interactors
 //La siguiente interfaz establece los métodos que necesitará el Interactor para hacer la consulta a los repositorios
 interface MoviesInteractor {
 

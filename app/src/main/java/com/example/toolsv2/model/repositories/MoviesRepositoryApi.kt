@@ -1,4 +1,4 @@
-package com.example.toolsv2.model.interfaces
+package com.example.toolsv2.model.repositories
 
 import retrofit2.Retrofit
 //La siguiente interfaz establecerá los métodos para hacer el consumo de la API y también para inicializar Retrofit que es el utilizado para hacer el consumo
@@ -8,5 +8,5 @@ interface MoviesRepositoryApi {
 
     fun initRetrofit(): Retrofit //Método para inicializar Retrofit
 
-    fun getDataBase()
+    fun getDataBase() //Método que nos permite obtener datos de nuestra base de datos local
 }

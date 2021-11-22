@@ -1,15 +1,15 @@
-package com.example.toolsv2.model.Interactors
+package com.example.toolsv2.model.interactors
 
-import com.example.toolsv2.model.interfaces.MoviesInteractor
-import com.example.toolsv2.model.interfaces.MoviesRepositoryApi
-import com.example.toolsv2.model.Api.MoviesRepositoryApiImpl
-import com.example.toolsv2.model.resources.CheckNetwork
-import com.example.toolsv2.present.MoviesPresenter
+import com.example.toolsv2.model.repositories.MoviesRepositoryApi
+import com.example.toolsv2.model.repositories.MoviesRepositoryApiImpl
+import com.example.toolsv2.presenter.MoviesPresenter
+import javax.inject.Singleton
 
 //Esta clase nos permite hacer uso de nuestra interfaz llama MoviesInteractor, además de poder vincularse con el Presenter y con nuestro repositorio
-class MoviesInteractorImpl(moviesPresenter:MoviesPresenter, var checkNetwork: Boolean): MoviesInteractor {
+class MoviesInteractorImpl(moviesPresenter:MoviesPresenter, var checkNetwork: Boolean):MoviesInteractor {
 
     //El siguiente valor nos permite instanciar el Presenter, lo cual es posible al momento de recibirlo como parámetro
+    @Singleton
     val moviesRepositoryApi: MoviesRepositoryApi = MoviesRepositoryApiImpl(moviesPresenter)
 
     /*El siguiente método es heredado de la interfaz MoviesInteractor y permite vincularse con el repositorio, obteniendo de el el método getApi

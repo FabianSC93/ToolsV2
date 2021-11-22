@@ -23,37 +23,38 @@
         />
 
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnUpload"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_weight="0.3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:text="@string/upload_images"
         android:layout_marginHorizontal="@dimen/common_padding_min"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/btnGallery" />
+        app:layout_constraintBottom_toTopOf="@+id/btnGallery"
+        style="@style/Button"
+        android:drawableStart="@drawable/ic_backup"/>
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnCamera"
         android:layout_width="0dp"
-        android:layout_height="50dp"
-        android:layout_margin="@dimen/common_padding_min"
+        android:layout_height="wrap_content"
         android:text="@string/camera"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btnGallery"
-        />
+        style="@style/Button"
+        android:drawableStart="@drawable/ic_camera"/>
 
-    <Button
-        android:layout_margin="@dimen/common_padding_min"
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnGallery"
         android:layout_width="0dp"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:text="@string/gallery"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btnCamera"
-        />
+        style="@style/Button"
+        android:drawableStart="@drawable/ic_insert_photo"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

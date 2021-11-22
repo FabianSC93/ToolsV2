@@ -1,9 +1,11 @@
-package com.example.toolsv2.model.Api
+package com.example.toolsv2.model.repositories
 
+import com.example.toolsv2.model.Api.JsonDataTopRated
+import com.example.toolsv2.model.Api.Movies
+import com.example.toolsv2.model.Api.MoviesApi
 import com.example.toolsv2.model.Room.MoviesApp
 import com.example.toolsv2.model.Room.MoviesTable
-import com.example.toolsv2.model.interfaces.MoviesRepositoryApi
-import com.example.toolsv2.present.MoviesPresenter
+import com.example.toolsv2.presenter.MoviesPresenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

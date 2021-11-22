@@ -25,6 +25,7 @@ class CheckNetwork(var context: Context) {
                         return true
                     }
                     //Se comprueba el nivel de SDK del dispositivo en caso de ser menor a 22, ejecutará la siguiente comprobación
+                    //Son funciones deprecated debido a que manejamos un nivel de api menor
                 } else {
                     return try {
                         //Si conexión es nula se retornará un false

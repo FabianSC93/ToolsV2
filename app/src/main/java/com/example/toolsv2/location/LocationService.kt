@@ -4,6 +4,7 @@ import android.app.Service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
@@ -45,24 +46,51 @@ class LocationService: Service() {
             this, object : MyLocationListener {
                 override fun onLocationChanged(location: Location?) {
                     mLocation = location
-                    mLocation?.let {
-                        AppExecutors.instance?.networkIO()?.execute {
-                            Log.d(TAG,"onLocationChanged: Latitude ${it.latitude} , Longitude ${it.longitude}")
-                            val mLocation = Coordinates("${it.latitude}","${it.longitude}")
+                    mLocation?.let {coordinate ->
+
+                            Log.d(TAG,"onLocationChanged: Latitude ${coordinate.latitude} , Longitude ${coordinate.longitude}")
+                            val mLocation = Coordinates("${coordinate.latitude}","${coordinate.longitude}")
                             val db = FirebaseFirestore.getInstance()
                             db.collection("Locations").add(mLocation)
                                 .addOnSuccessListener {  snapShot->
+                                    try {
+                                        generateNotification("Ubicación actual",coordinate.latitude.toString(),coordinate.longitude.toString())
 
+                                    }catch (e: Exception){}
                                 }
                                 .addOnFailureListener {
+                                    try {
+                                        generateNotification("No se obtuvo ubicación",coordinate.latitude.toString(),coordinate.longitude.toString())
 
+                                    }catch (e: Exception){
 
+                                    }
                                 }
-                        }
+
                     }
                 }
             })
         return START_STICKY
+    }
+
+    fun generateNotification(title: String, lat:String, lon:String){
+        val channelId = "canal_notificacion"
+        val Channelname = "com.example.toolsv2"
+        var builder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_location_on)
+            .setContentTitle(title)
+            .setContentText("lat: ${lat} y lon: ${lon}")
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText("lat: ${lat} y lon: ${lon}"))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        val notificationManager = this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val notificationChannel = NotificationChannel(channelId, Channelname, NotificationManager.IMPORTANCE_HIGH)
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
+        notificationManager.notify(0,builder.build())
+
     }
 
     override fun onBind(intent: Intent): IBinder? {
