@@ -3,4 +3,8 @@
     <string name="movies_title">Películas</string>
     <string name="location_title">Ubicación</string>
     <string name="gallery_title">Galería</string>
+    <string name="btn_text_location">Aceptar ubicación</string>
+    <string name="upload_images">Subir fotos</string>
+    <string name="camera">Camara</string>
+    <string name="gallery">Galería</string>
 </resources>
